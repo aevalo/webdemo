@@ -1,30 +1,25 @@
 package org.gradle.demo;
 
 import io.github.bonigarcia.wdm.ChromeDriverManager;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.*;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@Tag("fast")
 public class HelloServletFunctionalTest {
     private WebDriver driver;
 
-    @BeforeClass
-    public static void setupClass() {
+    @BeforeAll
+    public void setUp() throws Exception {
         ChromeDriverManager.getInstance().setup(); 
-    }
-
-    @Before
-    public void setUp() {
         driver = new ChromeDriver();               
     }
 
-    @After
+    @AfterAll
     public void tearDown() {
         if (driver != null)
             driver.quit();                         

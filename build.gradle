@@ -1,10 +1,61 @@
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+  dependencies {
+    classpath 'org.junit.platform:junit-platform-gradle-plugin:1.1.0'
+  }
+}
 plugins {
   id 'war'
   id 'org.akhikhl.gretty' version '1.4.2'
 }
 
 repositories {
-  jcenter()
+    jcenter()
+    mavenCentral()
+}
+
+allprojects {
+  apply plugin: 'org.junit.platform.gradle.plugin'
+  compileTestJava {
+	  sourceCompatibility = 1.8
+	  targetCompatibility = 1.8
+	  options.compilerArgs += '-parameters'
+  }
+  ext.junitPlatformVersion = '1.1.0'
+  ext.junitJupiterVersion  = '5.1.0'
+  ext.log4jVersion         = '2.8.2' // Due to Jetty
+  junitPlatform {
+    platformVersion junitPlatformVersion
+    filters {
+      engines {
+        include 'junit-jupiter'
+      }
+      tags {
+        // include 'fast'
+        // include 'fast', 'smoke & feature-a'
+        // exclude 'slow', 'ci'
+        exclude 'slow'
+      }
+      includeClassNamePattern '.*Test'
+    }
+    logManager 'org.apache.logging.log4j.jul.LogManager'
+      enableStandardTestTask = true
+    }
+    dependencies {
+        compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: log4jVersion
+        compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: log4jVersion
+        testCompile("org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}")
+        testRuntime("org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}")
+
+        // To use Log4J's LogManager
+        testRuntime("org.apache.logging.log4j:log4j-core:${log4jVersion}")
+        testRuntime("org.apache.logging.log4j:log4j-jul:${log4jVersion}")
+
+        // Only needed to run tests in an (IntelliJ) IDE(A) that bundles an older version
+        testRuntime("org.junit.platform:junit-platform-launcher:${junitPlatformVersion}")
+    }
 }
 
 gretty {
@@ -14,7 +65,6 @@ gretty {
 
 dependencies {
   providedCompile 'javax.servlet:javax.servlet-api:3.1.0'
-  testCompile 'junit:junit:4.12'
   testCompile 'org.mockito:mockito-core:2.7.19'
   testCompile 'io.github.bonigarcia:webdrivermanager:1.6.1' 
   testCompile 'org.seleniumhq.selenium:selenium-java:3.3.1' 
