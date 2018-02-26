@@ -6,10 +6,9 @@ import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInfo;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.BeforeEach;
+import static org.mockito.Mockito.*;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -20,10 +19,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.*;
-
-@Tag("fast")
+@Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class HelloServletTest {
     @Mock private HttpServletRequest request;
@@ -56,7 +52,7 @@ public class HelloServletTest {
 
         new HelloServlet().doPost(request, response);
 
-        verify(request).setAttribute("user", "World");
+        verify(request).setAttribute("greeting", "Hello, World!!!");
         verify(requestDispatcher).forward(request, response);
     }
 
@@ -69,7 +65,7 @@ public class HelloServletTest {
 
         new HelloServlet().doPost(request, response);
 
-        verify(request).setAttribute("user", "Dolly");
+        verify(request).setAttribute("greeting", "Hello, Dolly!!!");
         verify(requestDispatcher).forward(request, response);
     }
 }

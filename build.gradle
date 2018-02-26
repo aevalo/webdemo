@@ -1,31 +1,32 @@
 buildscript {
-  repositories {
-    mavenCentral()
-  }
   dependencies {
     classpath 'org.junit.platform:junit-platform-gradle-plugin:1.1.0'
   }
 }
+
 plugins {
   id 'war'
   id 'org.akhikhl.gretty' version '1.4.2'
 }
 
-repositories {
-    jcenter()
-    mavenCentral()
-}
-
 allprojects {
+  apply plugin: 'java'
   apply plugin: 'org.junit.platform.gradle.plugin'
+
+  repositories {
+      mavenCentral()
+  }
+
   compileTestJava {
 	  sourceCompatibility = 1.8
 	  targetCompatibility = 1.8
 	  options.compilerArgs += '-parameters'
   }
+
   ext.junitPlatformVersion = '1.1.0'
   ext.junitJupiterVersion  = '5.1.0'
   ext.log4jVersion         = '2.8.2' // Due to Jetty
+
   junitPlatform {
     platformVersion junitPlatformVersion
     filters {
@@ -33,29 +34,58 @@ allprojects {
         include 'junit-jupiter'
       }
       tags {
-        // include 'fast'
-        // include 'fast', 'smoke & feature-a'
-        // exclude 'slow', 'ci'
-        exclude 'slow'
+        include 'unit', 'functional', 'integration'
       }
       includeClassNamePattern '.*Test'
     }
     logManager 'org.apache.logging.log4j.jul.LogManager'
-      enableStandardTestTask = true
-    }
-    dependencies {
-        compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: log4jVersion
-        compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: log4jVersion
-        testCompile("org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}")
-        testRuntime("org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}")
+    enableStandardTestTask = true
+  }
 
-        // To use Log4J's LogManager
-        testRuntime("org.apache.logging.log4j:log4j-core:${log4jVersion}")
-        testRuntime("org.apache.logging.log4j:log4j-jul:${log4jVersion}")
+  configurations {
+      junitXmlToHtml
+  }
 
-        // Only needed to run tests in an (IntelliJ) IDE(A) that bundles an older version
-        testRuntime("org.junit.platform:junit-platform-launcher:${junitPlatformVersion}")
+  task generateHtmlTestReports {
+    doLast {
+      def reportsDir = new File(buildDir, 'test-reports')
+      reportsDir.mkdirs()
+
+      ant.taskdef(
+          name: 'junitReport',
+          classname: 'org.apache.tools.ant.taskdefs.optional.junit.XMLResultAggregator',
+          classpath: configurations.junitXmlToHtml.asPath
+      )
+
+      ant.junitReport(todir: "$buildDir/test-results/junit-platform", tofile: "aggregated-test-results.xml") {
+          fileset(dir: "$buildDir/test-results/junit-platform")
+          report(format: 'frames', todir: reportsDir)
+      }
     }
+  }
+
+  afterEvaluate {
+    def junitPlatformTestTask = tasks.getByName('junitPlatformTest')
+    generateHtmlTestReports.dependsOn(junitPlatformTestTask)
+    check.dependsOn(generateHtmlTestReports)
+  }
+
+  dependencies {
+    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: log4jVersion
+    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: log4jVersion
+
+    testCompile("org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}")
+    testRuntime("org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}")
+    // Only needed to run tests in an (IntelliJ) IDE(A) that bundles an older version
+    testRuntime("org.junit.platform:junit-platform-launcher:${junitPlatformVersion}")
+
+    // To use Log4J's LogManager
+    testRuntime("org.apache.logging.log4j:log4j-core:${log4jVersion}")
+    testRuntime("org.apache.logging.log4j:log4j-jul:${log4jVersion}")
+
+    testCompile 'org.mockito:mockito-core:2.+'
+    junitXmlToHtml 'org.apache.ant:ant-junit:1.10.2'
+  }
 }
 
 gretty {
@@ -64,8 +94,8 @@ gretty {
 }
 
 dependencies {
+  compile project(':core')
   providedCompile 'javax.servlet:javax.servlet-api:3.1.0'
-  testCompile 'org.mockito:mockito-core:2.7.19'
   testCompile 'io.github.bonigarcia:webdrivermanager:1.6.1' 
   testCompile 'org.seleniumhq.selenium:selenium-java:3.3.1' 
 }

@@ -9,7 +9,7 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@Tag("fast")
+@Tag("functional")
 public class HelloServletFunctionalTest {
     private WebDriver driver;
 
@@ -33,6 +33,6 @@ public class HelloServletFunctionalTest {
         driver.findElement(By.id("say-hello-button")).click();
 
         assertEquals("Hello Page", driver.getTitle());
-        assertEquals("Hello, Dolly!", driver.findElement(By.tagName("h2")).getText());
+        assertEquals("Hello, Dolly!!!", driver.findElement(By.tagName("h2")).getText());
     }
 }
